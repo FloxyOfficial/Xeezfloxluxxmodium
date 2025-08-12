@@ -541,28 +541,23 @@ function load_primordium_ff()
         end)
     end
     
-    -- Kill Aura Function
     function RunKA()
-        spawn(function()
-            while getgenv().KillAura == true do
-                task.wait()
-                for i, model in pairs(workspace:GetChildren()) do
-                    if game.Players.LocalPlayer.Character then
-                        if game.Players.LocalPlayer.Character.HumanoidRootPart then
-                            if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") and 
-                               model:FindFirstChild("Humanoid") then
+    spawn(function()
+        while getgenv().KillAura == true do
+            task.wait()
+            for i, model in pairs(workspace:GetChildren()) do
+                if game.Players.LocalPlayer.Character then
+                    if game.Players.LocalPlayer.Character.HumanoidRootPart then
+                        if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") and 
+                           model:FindFirstChild("Humanoid") then
+                            
+                            if model:FindFirstChild("Humanoid").Health ~= 0 then
+                                local distance = (model.HumanoidRootPart.Position - 
+                                                game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
                                 
-                                if model:FindFirstChild("Humanoid").Health ~= 0 then
-                                    local distance = (model.HumanoidRootPart.Position - 
-                                                    game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                                    
-                                    if distance < 15 then
-                                        if model.Name ~= game.Players.LocalPlayer.Name then
-                                            if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
-                                                game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = 
-                                                game.Players.LocalPlayer.Character
-                                            end
-                                            
+                                if distance < 15 then
+                                    if model.Name ~= game.Players.LocalPlayer.Name then
+                                        if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
                                             local sword = game.Players.LocalPlayer.Character.Sword
                                             sword.Handle.Massless = true
                                             sword.Handle.Size = Vector3.new(15, 15, 15)
@@ -575,8 +570,9 @@ function load_primordium_ff()
                     end
                 end
             end
-        end)
-    end
+        end
+    end)
+end
     
     -- Effect Terror Function
     function EffectTerror()
