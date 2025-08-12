@@ -3,7 +3,7 @@ setfpscap(500)
 local version = 2
 
 function checkVersion()
-    local versionUrl = "https://raw.githubusercontent.com/RedstoneWare/Primordium/refs/heads/main/version-txt"
+    local versionUrl = "https://raw.githubusercontent.com/FloxyOfficial/Xeezfloxluxxmodium/refs/heads/main/version-txt"
     local versionContent
     local isValidVersion = false
     
@@ -72,7 +72,7 @@ function load_primordium_ff()
     local respawnTime = game.Players.RespawnTime
     
     -- Load UI library
-    local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/valdor1k/TotalityLib/refs/heads/main/hvh"))()
+    local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/FloxyOfficial/Xeezfloxluxxmodium/refs/heads/main/FloxMordiumLib"))()
     ui:Theme("neverlose_blue")
     
     local window = ui:AddWindow("Primordium V2", "HvH | duvpeho scriptik")
