@@ -59,16 +59,47 @@ function load_primordium_ff()
     
     local shouldStop = false
     
+    -- Modified targeting system
     getgenv().TO_TARGET_PPL = {}
-    getgenv().TargetTable = {}
-   getgenv().WHITELIST = {
-   "defnotluxs", "coqxus", "yoxeez0", "xzysxxq"
-}
+    getgenv().TargetNames = {} -- Store player names instead of player objects
+    getgenv().TargetTable = {} -- Keep this for actual player objects (rebuilt each loop)
+    getgenv().WHITELIST = {
+        "defnotluxs", "coqxus", "yoxeez0", "xzysxxq"
+    }
     getgenv().TargetTable2 = {}
     
     local predictionCoroutines = {}
     local bodyPartConnections = {}
     local respawnTime = game.Players.RespawnTime
+    
+    -- Function to find players by partial name
+    function findPlayerByPartialName(partialName)
+        local foundPlayers = {}
+        local lowerPartial = string.lower(partialName)
+        
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if string.find(string.lower(player.Name), lowerPartial) then
+                table.insert(foundPlayers, player)
+            end
+        end
+        
+        return foundPlayers
+    end
+    
+    -- Function to rebuild target table from stored names
+    function rebuildTargetTable()
+        getgenv().TargetTable = {}
+        
+        for _, targetName in pairs(getgenv().TargetNames) do
+            -- Find players that match the stored name (partial or full)
+            local matchingPlayers = findPlayerByPartialName(targetName)
+            for _, player in pairs(matchingPlayers) do
+                if not table.find(getgenv().TargetTable, player) then
+                    table.insert(getgenv().TargetTable, player)
+                end
+            end
+        end
+    end
     
     -- Load UI library
     local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/FloxyOfficial/Xeezfloxluxxmodium/refs/heads/main/FloxMordiumLib"))()
@@ -255,28 +286,80 @@ function load_primordium_ff()
         end
     end)
     
-    -- Combat targeting
+    -- Modified combat targeting section
     combatSection:addTextbox('Add Target', "", function(targetName)
-        table.insert(getgenv().TargetTable, game.Players:FindFirstChild(targetName))
-        for i, target in pairs(getgenv().TargetTable) do
-            print(i, target)
+        if targetName and targetName ~= "" then
+            -- Find matching players
+            local foundPlayers = findPlayerByPartialName(targetName)
+            
+            if #foundPlayers > 0 then
+                -- Store the partial name for persistent targeting
+                if not table.find(getgenv().TargetNames, targetName) then
+                    table.insert(getgenv().TargetNames, targetName)
+                end
+                
+                -- Add found players to current target table
+                for _, player in pairs(foundPlayers) do
+                    if not table.find(getgenv().TargetTable, player) then
+                        table.insert(getgenv().TargetTable, player)
+                    end
+                end
+                
+                -- Print confirmation
+                print("Added target pattern:", targetName)
+                for _, player in pairs(foundPlayers) do
+                    print("  - Found player:", player.Name)
+                end
+            else
+                print("No players found matching:", targetName)
+            end
         end
     end)
     
     combatSection:addTextbox('Remove Target', "", function(targetName)
-        for i, target in ipairs(getgenv().TargetTable) do
-            if target == game.Players:FindFirstChild(targetName) then
-                table.remove(getgenv().TargetTable, i)
-                break
+        if targetName and targetName ~= "" then
+            -- Remove from stored names
+            for i, storedName in ipairs(getgenv().TargetNames) do
+                if string.lower(storedName) == string.lower(targetName) or 
+                   string.find(string.lower(storedName), string.lower(targetName)) then
+                    table.remove(getgenv().TargetNames, i)
+                    print("Removed target pattern:", storedName)
+                    break
+                end
             end
-        end
-        for i, target in pairs(getgenv().TargetTable) do
-            print(i, target)
+            
+            -- Remove matching players from current target table
+            local playersToRemove = findPlayerByPartialName(targetName)
+            for _, player in pairs(playersToRemove) do
+                for i, target in ipairs(getgenv().TargetTable) do
+                    if target == player then
+                        table.remove(getgenv().TargetTable, i)
+                        print("Removed from current targets:", player.Name)
+                        break
+                    end
+                end
+            end
+            
+            -- Rebuild target table
+            rebuildTargetTable()
         end
     end)
     
     combatSection:AddButton("Remove all Targets", function()
         getgenv().TargetTable = {}
+        getgenv().TargetNames = {}
+        print("Cleared all targets")
+    end)
+    
+    combatSection:AddButton("List Current Targets", function()
+        print("=== Target Patterns ===")
+        for i, name in pairs(getgenv().TargetNames) do
+            print(i, name)
+        end
+        print("=== Current Players ===")
+        for i, player in pairs(getgenv().TargetTable) do
+            print(i, player.Name)
+        end
     end)
     
     combatSection:AddToggle("Loop Kill", false, function()
@@ -402,7 +485,37 @@ function load_primordium_ff()
         end)
     end
     
-    -- Player setup
+    -- Player event handlers - rebuild target table when players join/leave
+    game.Players.PlayerAdded:Connect(function(player)
+        -- Rebuild target table to include new player if they match any patterns
+        rebuildTargetTable()
+        
+        -- Check if new player matches any target patterns
+        for _, targetName in pairs(getgenv().TargetNames) do
+            if string.find(string.lower(player.Name), string.lower(targetName)) then
+                print("New player matches target pattern:", player.Name, "matches", targetName)
+            end
+        end
+        
+        player.CharacterAdded:Connect(function(character)
+            if getgenv().PlayerModelSet == true then
+                SwingTool()
+            end
+        end)
+    end)
+    
+    game.Players.PlayerRemoving:Connect(function(player)
+        -- Remove from current target table but keep the name pattern
+        for i, target in ipairs(getgenv().TargetTable) do
+            if target == player then
+                table.remove(getgenv().TargetTable, i)
+                print("Player left but pattern remains active:", player.Name)
+                break
+            end
+        end
+    end)
+    
+    -- Player setup for existing players
     for i, player in pairs(game.Players:GetPlayers()) do
         if table.find(getgenv().TO_TARGET_PPL, player.Name) then
             table.insert(getgenv().TargetTable, player)
@@ -414,18 +527,6 @@ function load_primordium_ff()
             end
         end)
     end
-    
-    game.Players.PlayerAdded:Connect(function(player)
-        if table.find(getgenv().TO_TARGET_PPL, player.Name) then
-            table.insert(getgenv().TargetTable, player)
-        end
-        
-        player.CharacterAdded:Connect(function(character)
-            if getgenv().PlayerModelSet == true then
-                SwingTool()
-            end
-        end)
-    end)
     
     function BringTarget(targetPart)
         targetPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1, -4)
@@ -447,9 +548,12 @@ function load_primordium_ff()
         end
     end
     
-    -- Main loop kill logic
+    -- Modified main loop kill logic - rebuild target table periodically
     task.defer(function()
         repeat
+            -- Rebuild target table every few iterations to catch rejoining players
+            rebuildTargetTable()
+            
             for i, target in pairs(getgenv().TargetTable) do
                 if getgenv().LoopKill == true and target ~= game.Players.LocalPlayer and 
                    target.Character and target.Character:FindFirstChildOfClass("Part") and
@@ -487,7 +591,7 @@ function load_primordium_ff()
                     end
                 end
             end
-            task.wait()
+            task.wait(0.1)
         until shouldStop == true
     end)
     
@@ -541,27 +645,30 @@ function load_primordium_ff()
         end)
     end
     
+    -- Modified Kill Aura Function (without auto-equip)
     function RunKA()
-    spawn(function()
-        while getgenv().KillAura == true do
-            task.wait()
-            for i, model in pairs(workspace:GetChildren()) do
-                if game.Players.LocalPlayer.Character then
-                    if game.Players.LocalPlayer.Character.HumanoidRootPart then
-                        if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") and 
-                           model:FindFirstChild("Humanoid") then
-                            
-                            if model:FindFirstChild("Humanoid").Health ~= 0 then
-                                local distance = (model.HumanoidRootPart.Position - 
-                                                game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+        spawn(function()
+            while getgenv().KillAura == true do
+                task.wait()
+                for i, model in pairs(workspace:GetChildren()) do
+                    if game.Players.LocalPlayer.Character then
+                        if game.Players.LocalPlayer.Character.HumanoidRootPart then
+                            if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") and 
+                               model:FindFirstChild("Humanoid") then
                                 
-                                if distance < 15 then
-                                    if model.Name ~= game.Players.LocalPlayer.Name then
-                                        if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
-                                            local sword = game.Players.LocalPlayer.Character.Sword
-                                            sword.Handle.Massless = true
-                                            sword.Handle.Size = Vector3.new(15, 15, 15)
-                                            sword:Activate()
+                                if model:FindFirstChild("Humanoid").Health ~= 0 then
+                                    local distance = (model.HumanoidRootPart.Position - 
+                                                    game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                                    
+                                    if distance < 15 then
+                                        if model.Name ~= game.Players.LocalPlayer.Name then
+                                            -- Only activate if sword is already equipped (removed auto-equip)
+                                            if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                                                local sword = game.Players.LocalPlayer.Character.Sword
+                                                sword.Handle.Massless = true
+                                                sword.Handle.Size = Vector3.new(15, 15, 15)
+                                                sword:Activate()
+                                            end
                                         end
                                     end
                                 end
@@ -570,9 +677,8 @@ function load_primordium_ff()
                     end
                 end
             end
-        end
-    end)
-end
+        end)
+    end
     
     -- Effect Terror Function
     function EffectTerror()
