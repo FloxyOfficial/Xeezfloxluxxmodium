@@ -351,16 +351,7 @@ function load_primordium_ff()
         print("Cleared all targets")
     end)
     
-    combatSection:AddButton("List Current Targets", function()
-        print("=== Target Patterns ===")
-        for i, name in pairs(getgenv().TargetNames) do
-            print(i, name)
-        end
-        print("=== Current Players ===")
-        for i, player in pairs(getgenv().TargetTable) do
-            print(i, player.Name)
-        end
-    end)
+
     
     combatSection:AddToggle("Loop Kill", false, function()
         if getgenv().LoopKill == false then
