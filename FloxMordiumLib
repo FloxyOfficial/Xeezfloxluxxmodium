@@ -51,10 +51,11 @@ local function scrolling_connect(scrollframe)
 	task.spawn(function()
 		local addres = 45
 		local UIListLay = scrollframe:WaitForChild('UIListLayout', 9999999)
-		scrollframe.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + addres)
+		
+		scrollframe.CanvasSize = UDim2.new(0, 0, 0, UIListLay.AbsoluteContentSize.Y + addres)
 
-		UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-			scrollframe.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + addres)
+		UIListLay:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+			scrollframe.CanvasSize = UDim2.new(0, 0, 0, UIListLay.AbsoluteContentSize.Y + addres)
 		end)
 	end)
 end
