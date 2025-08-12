@@ -61,10 +61,9 @@ function load_primordium_ff()
     
     getgenv().TO_TARGET_PPL = {}
     getgenv().TargetTable = {}
-    getgenv().WHITELIST = {
-        "Vyxunusis", "Vynuxusis", "HVHIover", "KERX31", 
-        "XxLi0n_SparkxX2008", "SamuelNinja2006", "LeviMinerSlime"
-    }
+   getgenv().WHITELIST = {
+   "defnotluxs", "coqxus", "yoxeez0", "xzysxxq"
+}
     getgenv().TargetTable2 = {}
     
     local predictionCoroutines = {}
