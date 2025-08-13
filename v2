@@ -59,6 +59,9 @@ function load_primordium_ff()
     
     local shouldStop = false
     
+    -- Kill Aura connection variable for proper cleanup
+    local killAuraConnection = nil
+    
     -- Modified targeting system
     getgenv().TO_TARGET_PPL = {}
     getgenv().TargetNames = {} -- Store player names instead of player objects
@@ -241,13 +244,94 @@ function load_primordium_ff()
         end
     end)
     
-    -- Combat Section
-    combatSection:AddToggle("Kill Aura", false, function()
-        if getgenv().KillAura == false then
-            getgenv().KillAura = true
+    -- FIXED Kill Aura Function with proper cleanup and character handling
+    function RunKA()
+        -- Clean up any existing connection first
+        if killAuraConnection then
+            killAuraConnection:Disconnect()
+            killAuraConnection = nil
+        end
+        
+        -- Only create new connection if Kill Aura should be enabled
+        if getgenv().KillAura then
+            killAuraConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                -- Double check if still enabled (in case it was disabled while connection exists)
+                if not getgenv().KillAura then
+                    if killAuraConnection then
+                        killAuraConnection:Disconnect()
+                        killAuraConnection = nil
+                    end
+                    return
+                end
+                
+                -- Check if local player and character exist
+                local localPlayer = game.Players.LocalPlayer
+                if not localPlayer or not localPlayer.Character then
+                    return
+                end
+                
+                local localCharacter = localPlayer.Character
+                local localHRP = localCharacter:FindFirstChild("HumanoidRootPart")
+                
+                if not localHRP then
+                    return
+                end
+                
+                -- Loop through workspace models
+                for _, model in pairs(workspace:GetChildren()) do
+                    if model:IsA("Model") and model ~= localCharacter then
+                        local humanoid = model:FindFirstChild("Humanoid")
+                        local hrp = model:FindFirstChild("HumanoidRootPart")
+                        
+                        if humanoid and hrp and humanoid.Health > 0 then
+                            -- Calculate distance
+                            local distance = (hrp.Position - localHRP.Position).Magnitude
+                            
+                            if distance < 15 then
+                                -- Check if it's not the local player
+                                if model.Name ~= localPlayer.Name then
+                                    -- Only activate if sword is equipped
+                                    local sword = localCharacter:FindFirstChild("Sword")
+                                    if sword and sword:FindFirstChild("Handle") then
+                                        sword.Handle.Massless = true
+                                        sword.Handle.Size = Vector3.new(15, 15, 15)
+                                        sword.Handle.CanCollide = false
+                                        sword:Activate()
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    
+    -- Combat Section with FIXED Kill Aura toggle
+    combatSection:AddToggle("Kill Aura", false, function(value)
+        getgenv().KillAura = value
+        
+        if value then
+            -- Enable Kill Aura
             RunKA()
         else
-            getgenv().KillAura = false
+            -- Disable Kill Aura - Clean disconnect
+            if killAuraConnection then
+                killAuraConnection:Disconnect()
+                killAuraConnection = nil
+            end
+        end
+    end)
+    
+    -- Handle character respawn for Kill Aura
+    game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+        -- Wait a bit for character to fully load
+        task.wait(1)
+        
+        -- If Kill Aura was enabled, restart it after respawn
+        if getgenv().KillAura then
+            -- Restart Kill Aura with new character
+            RunKA()
         end
     end)
     
@@ -631,41 +715,6 @@ function load_primordium_ff()
                     game:GetService("ReplicatedStorage"):WaitForChild("ChangeTime"):FireServer(
                         "Anti333Exploitz123FF45324", 433, 429
                     )
-                end
-            end
-        end)
-    end
-    
-    -- Modified Kill Aura Function (without auto-equip)
-    function RunKA()
-        spawn(function()
-            while getgenv().KillAura == true do
-                task.wait()
-                for i, model in pairs(workspace:GetChildren()) do
-                    if game.Players.LocalPlayer.Character then
-                        if game.Players.LocalPlayer.Character.HumanoidRootPart then
-                            if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") and 
-                               model:FindFirstChild("Humanoid") then
-                                
-                                if model:FindFirstChild("Humanoid").Health ~= 0 then
-                                    local distance = (model.HumanoidRootPart.Position - 
-                                                    game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                                    
-                                    if distance < 15 then
-                                        if model.Name ~= game.Players.LocalPlayer.Name then
-                                            -- Only activate if sword is already equipped (removed auto-equip)
-                                            if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
-                                                local sword = game.Players.LocalPlayer.Character.Sword
-                                                sword.Handle.Massless = true
-                                                sword.Handle.Size = Vector3.new(15, 15, 15)
-                                                sword:Activate()
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
                 end
             end
         end)
@@ -1096,7 +1145,6 @@ function load_primordium_ff()
     SpinBot()
 end
 
--- Main execution
 if checkVersion() == true then
     load_primordium_ff()
 end
