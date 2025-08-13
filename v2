@@ -102,7 +102,7 @@ function load_primordium_ff()
     end
     
     -- Load UI library
-    local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/FloxyOfficial/Xeezfloxluxxmodium/refs/heads/main/FloxMordiumLib"))()
+    local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/FloxyOfficial/Xeezfloxluxxmodium/refs/heads/main/XFL"))()
     ui:Theme("neverlose_blue")
     
     local window = ui:AddWindow("XeezFloxLuxxModium V2", "XFL | Xeezovo_Floxyho_luxxovo scriptik")
