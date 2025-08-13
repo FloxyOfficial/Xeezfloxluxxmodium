@@ -243,11 +243,11 @@ function load_primordium_ff()
         end
     end)
     
-    -- Modified Kill Aura Function (restored original with hitbox fix)
+    -- Modified Kill Aura Function (restored original with hitbox fix + STRONGER killing)
     function RunKA()
         spawn(function()
             while getgenv().KillAura == true do
-                task.wait()
+                task.wait(0.01) -- FASTER: Reduced from default wait() to 0.01 seconds
                 for i, model in pairs(workspace:GetChildren()) do
                     if game.Players.LocalPlayer.Character then
                         if game.Players.LocalPlayer.Character.HumanoidRootPart then
@@ -265,7 +265,15 @@ function load_primordium_ff()
                                                 local sword = game.Players.LocalPlayer.Character.Sword
                                                 sword.Handle.Massless = true
                                                 sword.Handle.Size = Vector3.new(15, 15, 15)
-                                                sword:Activate()
+                                                sword.Handle.CanCollide = false -- STRONGER: Prevent collision issues
+                                                
+                                                -- STRONGER: Multiple rapid swings for faster killing
+                                                spawn(function()
+                                                    for swingCount = 1, 3 do -- 3 rapid swings instead of 1
+                                                        sword:Activate()
+                                                        task.wait(0.01) -- Very fast between swings
+                                                    end
+                                                end)
                                             end
                                         end
                                     end
@@ -282,6 +290,7 @@ function load_primordium_ff()
                 if sword:FindFirstChild("Handle") then
                     sword.Handle.Size = Vector3.new(4, 4, 4) -- Reset to normal size
                     sword.Handle.Massless = false -- Reset massless
+                    sword.Handle.CanCollide = true -- Reset collision
                 end
             end
         end)
@@ -301,6 +310,7 @@ function load_primordium_ff()
                 if sword:FindFirstChild("Handle") then
                     sword.Handle.Size = Vector3.new(4, 4, 4) -- Reset to normal size
                     sword.Handle.Massless = false -- Reset massless
+                    sword.Handle.CanCollide = true -- Reset collision
                 end
             end
         end
