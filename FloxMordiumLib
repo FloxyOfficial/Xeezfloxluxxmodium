@@ -596,32 +596,35 @@ function NEVERLOSE:AddWindow(NameScriptHub,Text,UICustomSize)
 	UserData.ZIndex = 5
 
 	UICorner_7.CornerRadius = UDim.new(0, 0)
-	UICorner_7.Parent = UserData
+UICorner_7.Parent = UserData
 
-	function WindowFunctinos:AddTabLabel(Label)
-		local TabTitle = Instance.new("TextLabel")
-		local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+function WindowFunctinos:AddTabLabel(Label)
+	local TabTitle = Instance.new("TextLabel")
+	local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
 
-		TabTitle.Name = "TabTitle"
-		TabTitle.Parent = TabButtons
-		TabTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		TabTitle.BackgroundTransparency = 1.000
-		TabTitle.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		TabTitle.BorderSizePixel = 0
-		TabTitle.Size = UDim2.new(0.949999988, 0, 0.5, 0)
-		TabTitle.ZIndex = 5
-		TabTitle.Font = Enum.Font.Gotham
-		TabTitle.Text = Label or "Home"
-		TabTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-		TabTitle.TextScaled = true
-		TabTitle.TextSize = 14.000
-		TabTitle.TextTransparency = 0.610
-		TabTitle.TextWrapped = true
-		TabTitle.TextXAlignment = Enum.TextXAlignment.Left
+	TabTitle.Name = "TabTitle"
+	TabTitle.Parent = TabButtons
+	TabTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	TabTitle.BackgroundTransparency = 1
+	TabTitle.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	TabTitle.BorderSizePixel = 0
+	TabTitle.Size = UDim2.new(0.95, 0, 0.5, 0)
+	TabTitle.ZIndex = 5
+	TabTitle.Font = Enum.Font.Gotham
+	TabTitle.Text = tostring(Label or "Home") -- ensure it's always a string
+	TabTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TabTitle.TextScaled = true
+	TabTitle.TextSize = 14
+	TabTitle.TextTransparency = 0.61
+	TabTitle.TextWrapped = true
+	TabTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-		UIAspectRatioConstraint.Parent = TabTitle
-		UIAspectRatioConstraint.AspectRatio = 7.000
-		UIAspectRatioConstraint.AspectType = Enum.AspectType.ScaleWithParentSize
+	UIAspectRatioConstraint.Parent = TabTitle
+	UIAspectRatioConstraint.AspectRatio = 7
+	UIAspectRatioConstraint.AspectType = Enum.AspectType.ScaleWithParentSize
+
+	return TabTitle -- return so you can reference safely later
+end
 
 		local funcs = {}
 
@@ -1841,26 +1844,27 @@ function NEVERLOSE:AddWindow(NameScriptHub,Text,UICustomSize)
 
 						auto_updatea()
 
-						for i,v in ipairs(DownBar:GetChildren()) do
-							if v:isA('TextButton') then
-								v.Size=UDim2.new(0,0,0,0)
-								v.TextTransparency=1
-								TweenService:Create(v,TweenInfo.new(0,{
-									Size  = UDim2.new(0.99000001, 0, 0.5, 0),
-									TextTransparency=0.3
-								})):Play()
-							end
-						end
+for i, v in ipairs(DownBar:GetChildren()) do
+    if v:IsA("TextButton") then
+        v.Size = UDim2.new(0, 0, 0, 0)
+        v.TextTransparency = 1
+        TweenService:Create(v, TweenInfo.new(0), {
+            Size  = UDim2.new(0.99000001, 0, 0.5, 0),
+            TextTransparency = 0.3
+        }):Play()
+    end
+end
+
 					else
-						for i,v in ipairs(DownBar:GetChildren()) do
-							if v:isA('TextButton') then
-								v.TextTransparency=.3
-								TweenService:Create(v,TweenInfo.new(0),{
-									Size  = UDim2.new(0,0,0,0),
-									TextTransparency=1
-								}):Play()
-							end
-						end
+for i, v in ipairs(DownBar:GetChildren()) do
+    if v:IsA("TextButton") then
+        v.TextTransparency = 0.3
+        TweenService:Create(v, TweenInfo.new(0), {
+            Size  = UDim2.new(0, 0, 0, 0),
+            TextTransparency = 1
+        }):Play()
+    end
+end
 
 						TweenService:Create(Icon,TweenInfo.new(0),{Rotation=-90}):Play()
 						TweenService:Create(LabelText,TweenInfo.new(0),{TextTransparency=0.3}):Play()
