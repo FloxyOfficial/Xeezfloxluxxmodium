@@ -1843,20 +1843,20 @@ local function DropdownToggleEffect(val)
             if v:IsA('TextButton') then
                 v.Size = UDim2.new(0, 0, 0, 0)
                 v.TextTransparency = 1
-                local tween = TweenService:Create(v, TweenInfo.new(0), {})
-                tween.Size = UDim2.new(0.99000001, 0, 0.5, 0)
-                tween.TextTransparency = 0.3
-                tween:Play()
+                TweenService:Create(v, TweenInfo.new(0), {
+                    Size = UDim2.new(0.99000001, 0, 0.5, 0),
+                    TextTransparency = 0.3
+                }):Play()
             end
         end
     else
         for i, v in ipairs(DownBar:GetChildren()) do
             if v:IsA('TextButton') then
                 v.TextTransparency = 0.3
-                local tween = TweenService:Create(v, TweenInfo.new(0), {})
-                tween.Size = UDim2.new(0, 0, 0, 0)
-                tween.TextTransparency = 1
-                tween:Play()
+                TweenService:Create(v, TweenInfo.new(0), {
+                    Size = UDim2.new(0, 0, 0, 0),
+                    TextTransparency = 1
+                }):Play()
             end
         end
         TweenService:Create(Icon, TweenInfo.new(0), {Rotation = -90}):Play()
