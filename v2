@@ -105,7 +105,7 @@ function load_primordium_ff()
     local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/FloxyOfficial/Xeezfloxluxxmodium/refs/heads/main/XFL"))()
     ui:Theme("neverlose_blue")
     
-    local window = ui:AddWindow("XeezFloxLuxxModium V2", "XFL | Xeezovo_Floxyho_luxxovo scriptik")
+    local window = ui:AddWindow("XeezFloxLuxxMordium V2", "XFL | Xeezovo_Floxyho_luxxovo scriptik")
     local notification = ui:Notification()
     notification.MaxNotifications = 6
     
