@@ -35,6 +35,7 @@ function load_primordium_ff()
     getgenv().TimeUp = false
     getgenv().KillAura = false
     getgenv().Effect = false
+    getgenv().EffectTerrorSpeed = 0.05 -- Default speed value (0.05 seconds)
     getgenv().LoopKill = false
     getgenv().TeleportLoopKill = false
     getgenv().SpinBot = false
@@ -71,6 +72,24 @@ function load_primordium_ff()
     local predictionCoroutines = {}
     local bodyPartConnections = {}
     local respawnTime = game.Players.RespawnTime
+    
+    -- Function to convert slider value (1-15) to actual speed (0.5 to 0.01)
+    function convertEffectTerrorSpeed(sliderValue)
+        -- Linear interpolation from slider range to speed range
+        -- Slider: 1-15, Speed: 0.5-0.01 (reversed because higher slider = faster = lower delay)
+        local minSlider = 1
+        local maxSlider = 15
+        local maxSpeed = 0.5  -- Slowest speed (highest delay)
+        local minSpeed = 0.01 -- Fastest speed (lowest delay)
+        
+        -- Normalize slider value to 0-1 range
+        local normalized = (sliderValue - minSlider) / (maxSlider - minSlider)
+        
+        -- Convert to speed range (reversed)
+        local speed = maxSpeed - (normalized * (maxSpeed - minSpeed))
+        
+        return speed
+    end
     
     -- Function to find players by partial name
     function findPlayerByPartialName(partialName)
@@ -272,6 +291,12 @@ function load_primordium_ff()
     
     funSection:AddSlider('Spin Bot Speed', 1, 100, 50, function(speed)
         getgenv().SpinBotSpeed = speed
+    end)
+    
+    -- Add Effect Terror Speed slider below Spin Bot Speed
+    funSection:AddSlider('Effect Terror Speed', 1, 15, 10, function(speed)
+        getgenv().EffectTerrorSpeed = convertEffectTerrorSpeed(speed)
+        print("Effect Terror Speed set to:", getgenv().EffectTerrorSpeed, "seconds")
     end)
     
     funSection:AddButton("Sword Sound Spam", function()
@@ -671,11 +696,11 @@ function load_primordium_ff()
         end)
     end
     
-    -- Effect Terror Function
+    -- Modified Effect Terror Function with speed control
     function EffectTerror()
         spawn(function()
             while getgenv().Effect == true do
-                wait(0.05)
+                wait(getgenv().EffectTerrorSpeed) -- Use the configurable speed
                 for i, player in pairs(game.Players:GetChildren()) do
                     game:GetService("ReplicatedStorage"):WaitForChild("PerformKillEffect"):FireServer(player.Name)
                 end
