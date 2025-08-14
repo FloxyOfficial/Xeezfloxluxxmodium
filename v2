@@ -27,7 +27,7 @@ function checkVersion()
     return isValidVersion
 end
 
-function load_primordium_ff()
+function load_XeezFloxLuxxMordium_ff()
     setfpscap(500)
     
     -- Initialize global variables
@@ -1123,5 +1123,5 @@ end
 
 -- Main execution
 if checkVersion() == true then
-    load_primordium_ff()
+    load_XeezFloxLuxxMordium_ff()
 end
